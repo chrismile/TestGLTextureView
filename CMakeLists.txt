@@ -1,0 +1,62 @@
+cmake_minimum_required(VERSION 3.10...4.0)
+
+project(TestGLTextureView)
+
+set(CMAKE_CXX_STANDARD 17)
+
+file(GLOB_RECURSE SOURCES src/*.cpp src/*.c src/*.hpp src/*.h)
+include_directories(src)
+
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W3 /EHsc /Zc:__cplusplus")
+elseif(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+endif()
+
+option(USE_STATIC_STD_LIBRARIES "Link with standard libraries statically." OFF)
+
+if (WIN32)
+    list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/EglContext.hpp)
+    list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/EglContext.cpp)
+else()
+    list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/WglContext.hpp)
+    list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/WglContext.cpp)
+    list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/WindowsUtils.hpp)
+    list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/WindowsUtils.cpp)
+endif()
+
+add_executable(TestGLTextureView ${SOURCES})
+
+target_include_directories(TestGLTextureView PRIVATE third_party)
+target_include_directories(TestGLTextureView PRIVATE third_party/EGL)
+
+if (${USE_STATIC_STD_LIBRARIES})
+    if((MSYS OR MINGW OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")) AND ${USE_STATIC_STD_LIBRARIES})
+        target_link_options(TestGLTextureView PRIVATE -static-libgcc -static-libstdc++)
+    endif()
+    if((MSYS OR MINGW OR (WIN32 AND (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))) AND ${USE_STATIC_STD_LIBRARIES})
+        target_link_options(TestGLTextureView PRIVATE -static -lpthread)
+    endif()
+    if(UNIX AND NOT APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_link_options(TestGLTextureView PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/CMake/symbols_linux_gcc.map")
+    endif()
+    if (MSVC)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
+endif()
+
+if(MSVC)
+    set_target_properties(TestGLTextureView PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE")
+    set_target_properties(TestGLTextureView PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE")
+    set_target_properties(TestGLTextureView PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:CONSOLE")
+    set_target_properties(TestGLTextureView PROPERTIES COMPILE_DEFINITIONS_RELWITHDEBINFO "_CONSOLE")
+    set_target_properties(TestGLTextureView PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:CONSOLE")
+    set_target_properties(TestGLTextureView PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:CONSOLE")
+endif()
+
+if(MSYS OR MINGW OR (${CMAKE_GENERATOR} STREQUAL "MinGW Makefiles") OR (${CMAKE_GENERATOR} STREQUAL "MSYS Makefiles"))
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mconsole")
+    target_link_libraries(TestGLTextureView PUBLIC mingw32)
+endif()
