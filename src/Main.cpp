@@ -183,7 +183,7 @@ void runTests(OglContext* context) {
                 std::cout << "Mismatch at layer index " << layerIndex << ", mip level " << mipLevel << "." << std::endl;
                 std::cout << "Expected: " << std::endl;
                 for (int i = 0; i < mipLevelSize * mipLevelSize * 2; i++) {
-                    std::cout << int(readbackData[i]);
+                    std::cout << int(expectedData[i]);
                     if (i == mipLevelSize * mipLevelSize * 2 - 1) {
                         std::cout << std::endl;
                     } else {
@@ -192,7 +192,7 @@ void runTests(OglContext* context) {
                 }
                 std::cout << "Got: " << std::endl;
                 for (int i = 0; i < mipLevelSize * mipLevelSize * 2; i++) {
-                    std::cout << int(expectedData[i]);
+                    std::cout << int(readbackData[i]);
                     if (i == mipLevelSize * mipLevelSize * 2 - 1) {
                         std::cout << std::endl;
                     } else {
